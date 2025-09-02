@@ -1,0 +1,14 @@
+[project]
+name = "First_adk_app"
+version = "0.0.1"
+dependencies = [
+    "adk>=0.0.5",
+    "google-adk>=1.13.0",
+    "pip>=25.2",
+]
+
+[dependency-groups]
+dev = [
+    "adk>=0.0.5",
+]
+
