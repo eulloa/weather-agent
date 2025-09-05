@@ -40,6 +40,7 @@ def get_weather(city: str) -> dict:
         tz = ZoneInfo(tz_identifier)
     except (ZoneInfoNotFoundError) as e:
         f"No time zone info found: "
+        tz = None
 
     if tz is not None:
         now = datetime.datetime.now(tz)
@@ -48,7 +49,7 @@ def get_weather(city: str) -> dict:
             "status": "succes",
             "report": (
                 f'The weather in {city} is {response["main"]["temp"]} but it feels like {response["main"]["feels_like"]}',
-                'I was not able to find associated time zone information though'
+                f'The current time in {city} is {now.strftime("%Y-%m-%d %H:%M:%S %Z%z")}'
                 ),
         }
 
@@ -56,7 +57,7 @@ def get_weather(city: str) -> dict:
         "status": "succes",
         "report": (
                f'The weather in {city} is {response["main"]["temp"]} but it feels like {response["main"]["feels_like"]}',
-               'The current time in {city} is {now.strftime("%Y-%m-%d %H:%M:%S %Z%z")}'
+               f'I was not able to find associated time zone information though'
             ),
     }
 
@@ -96,36 +97,6 @@ def get_weather(city: str) -> dict:
 #     )
 #     return {"status": "success", "report": report}
 
-def get_current_time(city: str) -> dict:
-    """Returns the current time in a specified city.
-
-    Args:
-        city (str): The name of the city for which to retrieve the current time.
-
-    Returns:
-        dict: status and result or error msg.
-    """
-
-    if city.lower() == "new york":
-        tz_identifier = "America/New_York"
-    if city.lower() == "chicago":
-        tz_identifier = "America/Chicago"
-    else:
-        return {
-            "status": "error",
-            "error_message": (
-                f"Sorry, I don't have timezone information for {city}."
-            ),
-        }
-
-    tz = ZoneInfo(tz_identifier)
-    now = datetime.datetime.now(tz)
-    report = (
-        f'The current time in {city} is {now.strftime("%Y-%m-%d %H:%M:%S %Z%z")}'
-    )
-    return {"status": "success", "report": report}
-
-
 root_agent = Agent(
     name="weather_time_agent",
     model="gemini-2.0-flash",
@@ -138,5 +109,5 @@ root_agent = Agent(
         "You are a helpful agent who can answer user questions about the time and weather in a city. You MUST ask the user first if the city is in America, Europe, or Asia."
     ),
     # output_key="option",
-    tools=[get_weather, get_current_time],
+    tools=[get_weather],
 )
