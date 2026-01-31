@@ -1,8 +1,10 @@
 import datetime
 import requests
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
-from google.adk.agents import Agent
+# from google.adk.agents import Agent
 from google.adk.tools import ToolContext
+from google.adk.agents import LlmAgent
+from google.adk.models.lite_llm import LiteLlm
 
 def get_json_data(city: str):
     BASE_URL = "http://api.openweathermap.org/data/2.5/weather?"
@@ -97,9 +99,10 @@ def get_weather(city: str) -> dict:
 #     )
 #     return {"status": "success", "report": report}
 
-root_agent = Agent(
+root_agent = LlmAgent(
     name="weather_time_agent",
-    model="gemini-2.0-flash",
+    model=LiteLlm(model="ollama_chat/qwen3:latest"),
+    # model="gemini-2.0-flash",
     # model="gemini-2.0-flash-live-001",
     # model="gemini-2.0-flash-live-preview-04-09",
     description=(
