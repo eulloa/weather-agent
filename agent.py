@@ -1,20 +1,37 @@
-import datetime
-import requests
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
-# from google.adk.agents import Agent
-from google.adk.tools import ToolContext
+from dotenv import load_dotenv
+from google.adk.agents import Agent
 from google.adk.agents import LlmAgent
 from google.adk.models.lite_llm import LiteLlm
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+from google.adk.tools.tool_context import ToolContext
+from google.genai import types
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+import asyncio
+import datetime
+import os
+import requests
+
+import warnings
+warnings.filterwarnings("ignore")
+
+import logging
+logging.basicConfig(level=logging.ERROR)
+
+load_dotenv()
+
+# session management
+session_service = InMemorySessionService()
 
 def get_json_data(city: str):
     BASE_URL = "http://api.openweathermap.org/data/2.5/weather?"
-    API_KEY = "87ad902d24be999eed791156678a3ec7"
+    API_KEY = os.getenv("OPEN_WEATHER_API_KEY")
     url = BASE_URL + "appid=" + API_KEY + "&q=" + city + "&units=imperial"
     response = requests.get(url).json()
     print(response)
     return response
 
-def get_weather(city: str) -> dict:
+def get_weather(city: str, tool_context: ToolContext) -> dict:
     """Retrieves the current weather report for a specified city.
 
     Args:
@@ -24,6 +41,10 @@ def get_weather(city: str) -> dict:
         dict: status and result or error msg.
     """
     response = get_json_data(city)
+
+    # TODO: tool_context logic below does not work as expected
+    continent = tool_context.state
+    print('!!! continent', continent)
 
     if response is None:
         return {
@@ -35,6 +56,7 @@ def get_weather(city: str) -> dict:
 
     print(f"formatted city {formatted_city}")
 
+    # TODO: refactor time into it's own tool
     tz_identifier = f"America/{formatted_city}"
     tz = None 
 
@@ -109,8 +131,8 @@ root_agent = LlmAgent(
         "Agent to answer questions about the time and weather in a city."
     ),
     instruction=(
-        "You are a helpful agent who can answer user questions about the time and weather in a city. You MUST ask the user first if the city is in America, Europe, or Asia."
+        "You are a helpful agent who can answer user questions about the time and weather in a city. You MUST ask the user first if the city is in America, Europe, or Asia. Before providing the time and weather, make sure you repeat the continent the user requests."
     ),
-    # output_key="option",
+    # output_key="continent",
     tools=[get_weather],
 )
